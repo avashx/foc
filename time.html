@@ -4,51 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Management App</title>
-    <style>
-
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-}
-
-.container {
-    width: 300px;
-    text-align: center;
-}
-
-h1 {
-    color: #333;
-}
-
-#timer, #task-tracker {
-    margin-top: 20px;
-    padding: 15px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-#taskList {
-    list-style-type: none;
-    padding: 0;
-}
-
-#taskList li {
-    display: flex;
-    justify-content: space-between;
-    background-color: #e0e0e0;
-    margin: 5px 0;
-    padding: 5px;
-    border-radius: 5px;
-}
-
-
-
+    <link rel="stylesheet" href="style.css">
+    <!-- Include FullCalendar CSS & JavaScript -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.js"></script>
+    <style>body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    
+    .container {
+        width: 350px;
+        text-align: center;
+    }
+    
+    h1, h2 {
+        color: #333;
+    }
+    
+    #timer, #task-tracker, #calendar-section {
+        margin-top: 20px;
+        padding: 15px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    #taskList {
+        list-style-type: none;
+        padding: 0;
+    }
+    
+    #taskList li {
+        display: flex;
+        justify-content: space-between;
+        background-color: #e0e0e0;
+        margin: 5px 0;
+        padding: 5px;
+        border-radius: 5px;
+    }
     </style>
 </head>
 <body>
@@ -70,92 +69,133 @@ h1 {
             <button onclick="addTask()">Add Task</button>
             <ul id="taskList"></ul>
         </div>
+
+        <!-- Calendar Section -->
+        <div id="calendar-section">
+            <h2>Calendar</h2>
+            <div id="calendar"></div>
+        </div>
     </div>
 
-    <script>// Timer Logic
-        let timer;
-        let timerRunning = false;
-        let timeLeft = 25 * 60;
-        
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-        }
-        
-        function updateTimerDisplay() {
-            document.getElementById('time').innerText = formatTime(timeLeft);
-        }
-        
-        function startTimer() {
-            if (!timerRunning) {
-                timerRunning = true;
-                timer = setInterval(() => {
-                    if (timeLeft > 0) {
-                        timeLeft--;
-                        updateTimerDisplay();
-                    } else {
-                        clearInterval(timer);
-                        alert("Time's up! Take a break.");
-                        resetTimer();
-                    }
-                }, 1000);
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    displayTasks();
+    initializeCalendar();
+    updateTimerDisplay();
+});
+
+// Pomodoro Timer Logic
+let timer;
+let timerRunning = false;
+let timeLeft = 25 * 60;
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+}
+
+function updateTimerDisplay() {
+    document.getElementById('time').innerText = formatTime(timeLeft);
+}
+
+function startTimer() {
+    if (!timerRunning) {
+        timerRunning = true;
+        timer = setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateTimerDisplay();
+            } else {
+                clearInterval(timer);
+                alert("Time's up! Take a break.");
+                resetTimer();
             }
-        }
-        
-        function resetTimer() {
-            clearInterval(timer);
-            timerRunning = false;
-            timeLeft = 25 * 60;
-            updateTimerDisplay();
-        }
-        
-        // Task Tracker Logic
-        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-        
-        function displayTasks() {
-            const taskList = document.getElementById('taskList');
-            taskList.innerHTML = '';
-            tasks.forEach((task, index) => {
-                const taskItem = document.createElement('li');
-                taskItem.innerHTML = `
-                    ${task.name} - Priority: ${task.priority}
-                    <button onclick="deleteTask(${index})">X</button>
-                `;
-                taskList.appendChild(taskItem);
-            });
-        }
-        
-        function addTask() {
+        }, 1000);
+    }
+}
+
+function resetTimer() {
+    clearInterval(timer);
+    timerRunning = false;
+    timeLeft = 25 * 60;
+    updateTimerDisplay();
+}
+
+// Task Tracker Logic
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+function displayTasks() {
+    const taskList = document.getElementById('taskList');
+    taskList.innerHTML = '';
+    tasks.forEach((task, index) => {
+        const taskItem = document.createElement('li');
+        taskItem.innerHTML = `
+            ${task.name} - Priority: ${task.priority}
+            <button onclick="deleteTask(${index})">X</button>
+        `;
+        taskList.appendChild(taskItem);
+    });
+}
+
+function addTask() {
+    const taskInput = document.getElementById('taskInput');
+    const taskName = taskInput.value.trim();
+    if (taskName) {
+        const taskPriority = Math.floor(Math.random() * 10) + 1;  // Example random priority
+        const newTask = { name: taskName, priority: taskPriority };
+        tasks.push(newTask);
+        tasks = prioritizeTasks(tasks);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        displayTasks();
+        taskInput.value = '';
+    }
+}
+
+function deleteTask(index) {
+    tasks.splice(index, 1);
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    displayTasks();
+}
+
+// Simple Task Prioritization Function
+function prioritizeTasks(tasks) {
+    return tasks.sort((a, b) => b.priority - a.priority);
+}
+
+// Calendar and Scheduling Logic
+function initializeCalendar() {
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        selectable: true,
+        events: tasks.map(task => ({
+            title: task.name,
+            start: new Date().toISOString().slice(0, 10),
+        })),
+        dateClick: function(info) {
             const taskInput = document.getElementById('taskInput');
             const taskName = taskInput.value.trim();
             if (taskName) {
-                const taskPriority = Math.floor(Math.random() * 10) + 1;  // Simple random priority
-                const newTask = { name: taskName, priority: taskPriority };
+                const taskPriority = Math.floor(Math.random() * 10) + 1;
+                const newTask = { name: taskName, priority: taskPriority, date: info.dateStr };
                 tasks.push(newTask);
                 tasks = prioritizeTasks(tasks);
+                calendar.addEvent({
+                    title: newTask.name,
+                    start: info.dateStr
+                });
                 localStorage.setItem('tasks', JSON.stringify(tasks));
                 displayTasks();
                 taskInput.value = '';
+            } else {
+                alert("Please enter a task before scheduling it.");
             }
         }
-        
-        function deleteTask(index) {
-            tasks.splice(index, 1);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            displayTasks();
-        }
-        
-        // Simple Task Prioritization Function
-        function prioritizeTasks(tasks) {
-            return tasks.sort((a, b) => b.priority - a.priority);
-        }
-        
-        // Initial Load
-        document.addEventListener('DOMContentLoaded', () => {
-            displayTasks();
-            updateTimerDisplay();
-        });
-        </script>
+    });
+    calendar.render();
+}
+
+    </script>
 </body>
 </html>
