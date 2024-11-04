@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Management App</title>
+    <style>
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    width: 300px;
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+}
+
+#timer, #task-tracker {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#taskList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#taskList li {
+    display: flex;
+    justify-content: space-between;
+    background-color: #e0e0e0;
+    margin: 5px 0;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Time Management App</h1>
+
+        <!-- Timer Section -->
+        <div id="timer">
+            <h2>Pomodoro Timer</h2>
+            <p id="time">25:00</p>
+            <button onclick="startTimer()">Start</button>
+            <button onclick="resetTimer()">Reset</button>
+        </div>
+
+        <!-- Task Tracker Section -->
+        <div id="task-tracker">
+            <h2>Tasks</h2>
+            <input type="text" id="taskInput" placeholder="Enter a task">
+            <button onclick="addTask()">Add Task</button>
+            <ul id="taskList"></ul>
+        </div>
+    </div>
+
+    <script>// Timer Logic
+        let timer;
+        let timerRunning = false;
+        let timeLeft = 25 * 60;
+        
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+        }
+        
+        function updateTimerDisplay() {
+            document.getElementById('time').innerText = formatTime(timeLeft);
+        }
+        
+        function startTimer() {
+            if (!timerRunning) {
+                timerRunning = true;
+                timer = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timer);
+                        alert("Time's up! Take a break.");
+                        resetTimer();
+                    }
+                }, 1000);
+            }
+        }
+        
+        function resetTimer() {
+            clearInterval(timer);
+            timerRunning = false;
+            timeLeft = 25 * 60;
+            updateTimerDisplay();
+        }
+        
+        // Task Tracker Logic
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        
+        function displayTasks() {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const taskItem = document.createElement('li');
+                taskItem.innerHTML = `
+                    ${task.name} - Priority: ${task.priority}
+                    <button onclick="deleteTask(${index})">X</button>
+                `;
+                taskList.appendChild(taskItem);
+            });
+        }
+        
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const taskName = taskInput.value.trim();
+            if (taskName) {
+                const taskPriority = Math.floor(Math.random() * 10) + 1;  // Simple random priority
+                const newTask = { name: taskName, priority: taskPriority };
+                tasks.push(newTask);
+                tasks = prioritizeTasks(tasks);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                displayTasks();
+                taskInput.value = '';
+            }
+        }
+        
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            displayTasks();
+        }
+        
+        // Simple Task Prioritization Function
+        function prioritizeTasks(tasks) {
+            return tasks.sort((a, b) => b.priority - a.priority);
+        }
+        
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', () => {
+            displayTasks();
+            updateTimerDisplay();
+        });
+        </script>
+</body>
+</html>
